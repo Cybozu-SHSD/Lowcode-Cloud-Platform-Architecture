@@ -12,15 +12,6 @@ This project provides an interactive visualization of the Lowcode Cloud Platform
 - **Tenant (Data Plane)** - Standalone backend for each tenant
 - **Observability** - Logging, monitoring, and dashboard system
 
-## Tech Stack
-
-- **Vite** - Build tool and dev server
-- **React** - UI framework
-- **TypeScript** - Type safety
-- **shadcn-ui** - UI components
-- **Tailwind CSS** - Styling
-- **React Router** - Client-side routing
-
 
 ## Deployment
 
