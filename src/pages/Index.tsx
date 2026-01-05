@@ -9,7 +9,8 @@ import {
   ChevronRight,
   Network,
   Server,
-  Container
+  Container,
+  Cpu
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrokerSequenceDiagram, TokenCards } from "@/components/architecture/BrokerSequenceDiagram";
@@ -20,8 +21,9 @@ import { VPCOverviewArchitecture } from "@/components/architecture/VPCOverviewAr
 import { BrokerFCArchitecture } from "@/components/architecture/BrokerFCArchitecture";
 import { APIPlatformArchitecture } from "@/components/architecture/APIPlatformArchitecture";
 import { DataPlaneArchitecture } from "@/components/architecture/DataPlaneArchitecture";
+import { TenantCoreArchitecture } from "@/components/architecture/TenantCoreArchitecture";
 
-type SystemTab = "overview" | "broker" | "tenant" | "cluster" | "api" | "dataPlane" | "cloud";
+type SystemTab = "overview" | "broker" | "tenant" | "cluster" | "api" | "dataPlane" | "tenantCore" | "cloud";
 
 const systemCards = [
   {
@@ -339,11 +341,21 @@ const Index = () => {
           {/* Tenant (Data Plane) */}
           {activeTab === "dataPlane" && (
             <div className="animate-slide-in space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold">Tenant (Data Plane)</h3>
-                <p className="text-sm text-muted-foreground">
-                  Internal architecture within each tenant application
-                </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Tenant (Data Plane)</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Internal architecture within each tenant application
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("tenantCore")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors"
+                >
+                  <Cpu size={16} />
+                  View Core System Design
+                  <ChevronRight size={16} />
+                </button>
               </div>
               
               <div className="bg-secondary/30 rounded-xl p-5 border text-sm space-y-3">
@@ -360,6 +372,28 @@ const Index = () => {
               <div className="diagram-grid rounded-xl p-6 border bg-card">
                 <DataPlaneArchitecture />
               </div>
+            </div>
+          )}
+
+          {/* Tenant Core System */}
+          {activeTab === "tenantCore" && (
+            <div className="animate-slide-in space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold">Single Tenant Core System</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Core Pods, storage, and message queue design for a single tenant within VPC Container
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveTab("dataPlane")}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 transition-colors"
+                >
+                  ← Back to Data Plane Overview
+                </button>
+              </div>
+
+              <TenantCoreArchitecture />
             </div>
           )}
 
