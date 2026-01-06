@@ -10,7 +10,9 @@ import {
   Network,
   Server,
   Container,
-  Cpu
+  Cpu,
+  Monitor,
+  ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrokerSequenceDiagram, TokenCards } from "@/components/architecture/BrokerSequenceDiagram";
@@ -22,8 +24,10 @@ import { BrokerFCArchitecture } from "@/components/architecture/BrokerFCArchitec
 import { APIPlatformArchitecture } from "@/components/architecture/APIPlatformArchitecture";
 import { DataPlaneArchitecture } from "@/components/architecture/DataPlaneArchitecture";
 import { TenantCoreArchitecture } from "@/components/architecture/TenantCoreArchitecture";
+import { PCClientArchitecture } from "@/components/architecture/PCClientArchitecture";
+import { Button } from "@/components/ui/button";
 
-type SystemTab = "overview" | "broker" | "tenant" | "cluster" | "api" | "dataPlane" | "tenantCore" | "cloud";
+type SystemTab = "overview" | "broker" | "tenant" | "cluster" | "api" | "dataPlane" | "tenantCore" | "pcClient" | "cloud";
 
 const systemCards = [
   {
@@ -65,6 +69,27 @@ const systemCards = [
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState<SystemTab>("overview");
+
+  // Breadcrumb component
+  const Breadcrumb = ({ items }: { items: { label: string; onClick?: () => void }[] }) => (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          {index > 0 && <ChevronRight className="h-4 w-4" />}
+          {item.onClick ? (
+            <button 
+              onClick={item.onClick}
+              className="hover:text-foreground transition-colors"
+            >
+              {item.label}
+            </button>
+          ) : (
+            <span className="text-foreground font-medium">{item.label}</span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,7 +157,8 @@ const Index = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
               {systemCards.map((system) => {
                 const Icon = system.icon;
-                const isActive = activeTab === system.id;
+                const isActive = activeTab === system.id || 
+                  (system.id === "dataPlane" && (activeTab === "pcClient" || activeTab === "tenantCore"));
                 return (
                   <button
                     key={system.id}
@@ -341,21 +367,15 @@ const Index = () => {
           {/* Tenant (Data Plane) */}
           {activeTab === "dataPlane" && (
             <div className="animate-slide-in space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Tenant (Data Plane)</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Internal architecture within each tenant application
-                  </p>
-                </div>
-                <button
-                  onClick={() => setActiveTab("tenantCore")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm hover:bg-primary/90 transition-colors"
-                >
-                  <Cpu size={16} />
-                  View Core System Design
-                  <ChevronRight size={16} />
-                </button>
+              <Breadcrumb items={[
+                { label: "Tenant (Data Plane)" }
+              ]} />
+              
+              <div>
+                <h3 className="text-lg font-semibold">Tenant (Data Plane) Overview</h3>
+                <p className="text-sm text-muted-foreground">
+                  Single tenant deployment with multi-platform client support and NestJS backend
+                </p>
               </div>
               
               <div className="bg-secondary/30 rounded-xl p-5 border text-sm space-y-3">
@@ -369,31 +389,66 @@ const Index = () => {
                 </p>
               </div>
 
-              <div className="diagram-grid rounded-xl p-6 border bg-card">
-                <DataPlaneArchitecture />
-              </div>
+              <DataPlaneArchitecture 
+                onNavigateToPCClient={() => setActiveTab('pcClient')}
+                onNavigateToCoreSystem={() => setActiveTab('tenantCore')}
+              />
             </div>
           )}
 
-          {/* Tenant Core System */}
-          {activeTab === "tenantCore" && (
+          {/* PC Client Architecture */}
+          {activeTab === "pcClient" && (
             <div className="animate-slide-in space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">Single Tenant Core System</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Core Pods, storage, and message queue design for a single tenant within VPC Container
-                  </p>
-                </div>
-                <button
-                  onClick={() => setActiveTab("dataPlane")}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 transition-colors"
-                >
-                  ← Back to Data Plane Overview
-                </button>
+              <Breadcrumb items={[
+                { label: "Tenant (Data Plane)", onClick: () => setActiveTab('dataPlane') },
+                { label: "PC Client" }
+              ]} />
+
+              <Button 
+                variant="ghost" 
+                onClick={() => setActiveTab('dataPlane')}
+                className="flex items-center gap-2 -mt-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Data Plane Overview
+              </Button>
+
+              <div>
+                <h3 className="text-lg font-semibold">PC Client Architecture</h3>
+                <p className="text-sm text-muted-foreground">
+                  Next.js + BFF Proxy pattern for primary desktop client
+                </p>
               </div>
 
-              <TenantCoreArchitecture />
+              <PCClientArchitecture onNavigateToCoreSystem={() => setActiveTab('tenantCore')} />
+            </div>
+          )}
+
+          {/* Tenant Core Architecture */}
+          {activeTab === "tenantCore" && (
+            <div className="animate-slide-in space-y-6">
+              <Breadcrumb items={[
+                { label: "Tenant (Data Plane)", onClick: () => setActiveTab('dataPlane') },
+                { label: "Core System" }
+              ]} />
+
+              <Button 
+                variant="ghost" 
+                onClick={() => setActiveTab('dataPlane')}
+                className="flex items-center gap-2 -mt-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Data Plane Overview
+              </Button>
+
+              <div>
+                <h3 className="text-lg font-semibold">Core System Design</h3>
+                <p className="text-sm text-muted-foreground">
+                  NestJS-based backend microservices powering all tenant applications
+                </p>
+              </div>
+
+              <TenantCoreArchitecture onNavigateToPCClient={() => setActiveTab('pcClient')} />
             </div>
           )}
 
@@ -401,21 +456,16 @@ const Index = () => {
           {activeTab === "cluster" && (
             <div className="animate-slide-in space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Observability</h3>
+                <h3 className="text-lg font-semibold">Observability Platform</h3>
                 <p className="text-sm text-muted-foreground">
-                  Observability stack for logging, monitoring, and alerting
+                  Logging, monitoring, and dashboard for platform operations
                 </p>
               </div>
               
-              <div className="bg-secondary/30 rounded-xl p-5 border text-sm space-y-3">
+              <div className="bg-secondary/30 rounded-xl p-5 border text-sm">
                 <p>
-                  The <strong>Cluster Management</strong> system provides observability across both control plane 
-                  and data plane workloads. It collects metrics and logs from all services and provides dashboards 
-                  for operators to monitor system health.
-                </p>
-                <p>
-                  This system is used by the SRE/Ops team and is independent of tenant-facing functionality. 
-                  It can be upgraded from ACK-native Prometheus to ARMS as the platform scales.
+                  The <strong>Observability</strong> system provides unified logging and monitoring across all tenants.
+                  It collects logs from all pods, provides metrics dashboards, and enables alerting for operational issues.
                 </p>
               </div>
 
@@ -429,26 +479,19 @@ const Index = () => {
           {activeTab === "cloud" && (
             <div className="animate-slide-in space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Alibaba Cloud Services</h3>
+                <h3 className="text-lg font-semibold">Cloud Services Architecture</h3>
                 <p className="text-sm text-muted-foreground">
                   Infrastructure service selection and upgrade paths
                 </p>
               </div>
-
-              <div className="bg-secondary/30 rounded-xl p-5 border text-sm space-y-3">
-                <p>
-                  All systems are deployed on <strong>Cloud</strong> infrastructure, leveraging 
-                  managed services to reduce operational overhead. Each service is selected for minimal viable 
-                  functionality with a clear upgrade path.
-                </p>
+              
+              <div className="diagram-grid rounded-xl p-6 border bg-card">
+                <CloudServicesTable />
               </div>
-
-              <CloudServicesTable />
             </div>
           )}
         </div>
       </main>
-
     </div>
   );
 };

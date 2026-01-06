@@ -22,20 +22,30 @@ import {
   Settings,
   Sparkles,
   Network,
-  Container,
   Cloud,
   Home,
   ImageIcon,
   Crop,
   Maximize2,
   FileType,
-  X
+  X,
+  Monitor,
+  Smartphone,
+  Globe,
+  MessageSquare,
+  ArrowRight,
+  ChevronRight
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SystemFlowDiagram } from "./SystemFlowDiagram";
 import { MessageQueueDiagram } from "./MessageQueueDiagram";
+import { cn } from "@/lib/utils";
 
 type PodType = "main" | "worker" | "routine" | "fts" | "imgproxy";
+
+interface TenantCoreArchitectureProps {
+  onNavigateToPCClient?: () => void;
+}
 
 // Storage dependency mapping - distinguish standalone/cloud
 const podStorageMap: Record<PodType, {
@@ -74,8 +84,8 @@ const podStorageMap: Record<PodType, {
   }
 };
 
-export function TenantCoreArchitecture() {
-  const [selectedPod, setSelectedPod] = useState<PodType | null>(null);
+export function TenantCoreArchitecture({ onNavigateToPCClient }: TenantCoreArchitectureProps) {
+  const [selectedPod, setSelectedPod] = useState<PodType | null>("main");
   
   const handlePodClick = (pod: PodType) => {
     setSelectedPod(selectedPod === pod ? null : pod);
@@ -83,276 +93,576 @@ export function TenantCoreArchitecture() {
   
   return (
     <div className="space-y-8">
-      {/* System Flow Diagram */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <SystemFlowDiagram />
-      </div>
-      
-      {/* Pod Overview - 5 columns in one row */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <SectionHeader 
-          icon={Layers} 
-          title="Compute Layer Pods" 
-          subtitle="5 Deployments, separated by responsibility (click to view storage dependencies)"
-        />
-        
-        <div className="grid grid-cols-5 gap-4 mt-6">
-          <PodOverviewCard
-            pod="main"
-            name="main"
-            label="Core App"
-            labelColor="bg-blue-500"
-            icon={Server}
-            color="blue"
-            description="Business API & Data, Full NestJS Stack"
-            isSelected={selectedPod === "main"}
-            onClick={() => handlePodClick("main")}
-          />
-          <PodOverviewCard
-            pod="worker"
-            name="worker"
-            label="Satellite"
-            labelColor="bg-green-500"
-            icon={Cpu}
-            color="green"
-            description="Pure Consumer: Email, CSV Export"
-            isSelected={selectedPod === "worker"}
-            onClick={() => handlePodClick("worker")}
-          />
-          <PodOverviewCard
-            pod="routine"
-            name="routine"
-            label="Satellite"
-            labelColor="bg-orange-500"
-            icon={Clock}
-            color="orange"
-            description="Pure Executor: Cleanup, Maintenance"
-            isSelected={selectedPod === "routine"}
-            onClick={() => handlePodClick("routine")}
-          />
-          <PodOverviewCard
-            pod="fts"
-            name="fts"
-            label="Satellite"
-            labelColor="bg-purple-500"
-            icon={Search}
-            color="purple"
-            description="Standalone: File Parse, ES Index"
-            isSelected={selectedPod === "fts"}
-            onClick={() => handlePodClick("fts")}
-          />
-          <PodOverviewCard
-            pod="imgproxy"
-            name="imgproxy"
-            label="Base Svc"
-            labelColor="bg-pink-500"
-            icon={ImageIcon}
-            color="pink"
-            description="Image Processing: Crop, Resize, Watermark"
-            badge="Standalone"
-            badgeIcon={Home}
-            isSelected={selectedPod === "imgproxy"}
-            onClick={() => handlePodClick("imgproxy")}
-          />
-        </div>
-        
-        {/* Expanded Pod Detail */}
-        {selectedPod && (
-          <ExpandedPodDetail 
-            pod={selectedPod} 
-            onClose={() => setSelectedPod(null)} 
-          />
-        )}
-      </div>
-
-      {/* Storage Layer - by deployment mode */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <SectionHeader 
-          icon={Database} 
-          title="Storage Layer" 
-          subtitle={selectedPod ? `Storage used by ${selectedPod} Pod is highlighted` : "Persistence services, categorized by Common / Standalone / Cloud"}
-        />
-        
-        {/* Common Storage */}
-        <div className="mt-6 mb-6">
-          <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
-            <Network className="h-4 w-4" />
-            Common Storage (All Deployment Modes)
-          </h4>
-          <div className="grid grid-cols-3 gap-4">
-            <StorageCard
-              name="PostgreSQL"
-              type="Managed / External"
-              icon={Database}
-              color="blue"
-              description="Business Data R/W"
-              consumers={["main", "worker", "routine"]}
-              selectedPod={selectedPod}
-            />
-            <StorageCard
-              name="Redis"
-              type="Managed / External"
-              icon={Zap}
-              color="red"
-              description="Cache + MQ + Lock"
-              consumers={["main", "worker", "routine", "fts"]}
-              selectedPod={selectedPod}
-            />
-            <StorageCard
-              name="ElasticSearch"
-              type="Managed / External"
-              icon={Search}
-              color="yellow"
-              description="Full-Text Search Index"
-              consumers={["main", "fts"]}
-              selectedPod={selectedPod}
-            />
+      {/* Overview Section */}
+      <div className="bg-gradient-to-br from-blue-50/50 to-cyan-50/50 dark:from-blue-900/10 dark:to-cyan-900/10 rounded-xl p-6 border">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+            <Cpu size={18} />
+          </div>
+          <div>
+            <h4 className="font-semibold text-base">Core System Overview</h4>
+            <p className="text-xs text-muted-foreground">NestJS-based backend powering all tenant applications</p>
           </div>
         </div>
+        
+        <div className="bg-card rounded-lg p-4 border mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            The Core System is a monorepo NestJS application that provides RESTful APIs for all client platforms.
+            It consists of <strong>1 Core Pod</strong> (Main) and <strong>4 Satellite Pods</strong> (Worker, Routine, FTS, Imgproxy),
+            communicating via HTTP and Redis Message Queue.
+          </p>
+          
+          {/* Simple Architecture Diagram */}
+          <div className="bg-secondary/30 rounded-lg p-4">
+            <div className="flex flex-col items-center gap-3 text-xs">
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="font-medium text-muted-foreground mb-1">Clients</div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={onNavigateToPCClient}
+                      className="px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 transition-colors flex items-center gap-1"
+                    >
+                      <Monitor size={12} /> PC
+                    </button>
+                    <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">
+                      <MessageSquare size={12} className="inline" /> Mini
+                    </span>
+                    <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">
+                      <Smartphone size={12} className="inline" /> Mobile
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <ArrowRight size={16} className="text-muted-foreground rotate-90" />
+              
+              <div className="flex items-center gap-4">
+                <div className="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium flex items-center gap-2">
+                  <Server size={14} />
+                  Main Pod (API Gateway)
+                </div>
+              </div>
+              
+              <ArrowRight size={16} className="text-muted-foreground rotate-90" />
+              
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 rounded bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 font-medium">
+                  <Zap size={12} className="inline mr-1" />
+                  Redis MQ
+                </div>
+              </div>
+              
+              <ArrowRight size={16} className="text-muted-foreground rotate-90" />
+              
+              <div className="flex gap-2">
+                <span className="px-2 py-1 rounded bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300">Worker</span>
+                <span className="px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300">Routine</span>
+                <span className="px-2 py-1 rounded bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300">FTS</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Quick Facts */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="bg-card rounded-lg p-3 border">
+            <div className="text-xs text-muted-foreground mb-1">Compute</div>
+            <div className="text-sm font-medium">5 Pods (1 Core + 4 Satellite)</div>
+          </div>
+          <div className="bg-card rounded-lg p-3 border">
+            <div className="text-xs text-muted-foreground mb-1">Communication</div>
+            <div className="text-sm font-medium">HTTP + Redis Message Queue</div>
+          </div>
+          <div className="bg-card rounded-lg p-3 border">
+            <div className="text-xs text-muted-foreground mb-1">Storage</div>
+            <div className="text-sm font-medium">PostgreSQL, Redis, ES, OSS/MinIO</div>
+          </div>
+        </div>
+      </div>
 
-        {/* Standalone vs Cloud Storage */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Standalone Deployment Storage */}
-          <div className="border border-dashed border-orange-500/30 rounded-lg p-4 bg-orange-500/5">
-            <h4 className="text-sm font-medium text-orange-400 mb-3 flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              Standalone Deployment
-            </h4>
-            <div className="space-y-3">
-              <StorageCard
-                name="MinIO"
-                type="StatefulSet + PVC"
-                icon={HardDrive}
+      {/* Served Clients Section */}
+      <div className="bg-card border border-border rounded-xl p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Globe size={18} />
+            </div>
+            <div>
+              <h4 className="font-semibold text-base">Served Clients</h4>
+              <p className="text-xs text-muted-foreground">All platforms call the same RESTful API</p>
+            </div>
+          </div>
+          {onNavigateToPCClient && (
+            <button
+              onClick={onNavigateToPCClient}
+              className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-100 dark:bg-emerald-900/30 px-3 py-1.5 rounded-lg"
+            >
+              View PC Client Details <ChevronRight size={12} />
+            </button>
+          )}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button
+            onClick={onNavigateToPCClient}
+            className="group bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 rounded-lg p-4 border-2 border-emerald-200 dark:border-emerald-800 hover:border-emerald-500 transition-all text-left"
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Monitor size={18} className="text-emerald-600" />
+              <span className="font-semibold text-sm group-hover:text-emerald-600 transition-colors">PC Client</span>
+              <ChevronRight size={14} className="text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all ml-auto" />
+            </div>
+            <p className="text-xs text-muted-foreground">Next.js + BFF Proxy</p>
+            <p className="text-xs text-muted-foreground mt-1">Primary desktop application with admin portal</p>
+          </button>
+          
+          <div className="bg-slate-50 dark:bg-slate-900/20 rounded-lg p-4 border">
+            <div className="flex items-center gap-2 mb-2">
+              <MessageSquare size={18} className="text-blue-600" />
+              <span className="font-semibold text-sm">Mini Program</span>
+            </div>
+            <p className="text-xs text-muted-foreground">WeChat / Alipay</p>
+            <p className="text-xs text-muted-foreground mt-1">Direct API calls with SDK</p>
+          </div>
+          
+          <div className="bg-slate-50 dark:bg-slate-900/20 rounded-lg p-4 border opacity-60">
+            <div className="flex items-center gap-2 mb-2">
+              <Smartphone size={18} className="text-purple-600" />
+              <span className="font-semibold text-sm">Mobile Apps</span>
+            </div>
+            <p className="text-xs text-muted-foreground">iOS / Android</p>
+            <p className="text-xs text-muted-foreground mt-1">Native apps (coming soon)</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Tabbed Content */}
+      <Tabs defaultValue="compute" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="compute">Compute Layer</TabsTrigger>
+          <TabsTrigger value="storage">Storage Layer</TabsTrigger>
+          <TabsTrigger value="queue">Message Queue</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="compute" className="mt-6">
+          {/* System Flow Diagram */}
+          <div className="bg-card border border-border rounded-xl p-6 mb-6">
+            <SystemFlowDiagram />
+          </div>
+          
+          {/* Pod Overview - 5 columns in one row */}
+          <div className="bg-card border border-border rounded-xl p-6">
+            <SectionHeader 
+              icon={Layers} 
+              title="Compute Layer Pods" 
+              subtitle="5 Deployments, separated by responsibility (click to view storage dependencies)"
+            />
+            
+            <div className="grid grid-cols-5 gap-4 mt-6">
+              <PodOverviewCard
+                pod="main"
+                name="main"
+                label="Core App"
+                labelColor="bg-blue-500"
+                icon={Server}
+                color="blue"
+                description="Business API & Data, Full NestJS Stack"
+                isSelected={selectedPod === "main"}
+                onClick={() => handlePodClick("main")}
+              />
+              <PodOverviewCard
+                pod="worker"
+                name="worker"
+                label="Satellite"
+                labelColor="bg-green-500"
+                icon={Cpu}
+                color="green"
+                description="Pure Consumer: Email, CSV Export"
+                isSelected={selectedPod === "worker"}
+                onClick={() => handlePodClick("worker")}
+              />
+              <PodOverviewCard
+                pod="routine"
+                name="routine"
+                label="Satellite"
+                labelColor="bg-orange-500"
+                icon={Clock}
                 color="orange"
-                description="S3-Compatible Object Storage"
-                consumers={["main", "worker", "fts", "imgproxy"]}
-                pvc="minio-data"
-                selectedPod={selectedPod}
+                description="Pure Executor: Cleanup, Maintenance"
+                isSelected={selectedPod === "routine"}
+                onClick={() => handlePodClick("routine")}
               />
-              <div className="text-xs text-muted-foreground bg-background/50 rounded p-2">
-                <div className="flex items-center gap-1 text-orange-400 mb-1">
-                  <ImageIcon className="h-3 w-3" />
-                  <span className="font-medium">Imgproxy Note</span>
+              <PodOverviewCard
+                pod="fts"
+                name="fts"
+                label="Satellite"
+                labelColor="bg-purple-500"
+                icon={Search}
+                color="purple"
+                description="Standalone: File Parse, ES Index"
+                isSelected={selectedPod === "fts"}
+                onClick={() => handlePodClick("fts")}
+              />
+              <PodOverviewCard
+                pod="imgproxy"
+                name="imgproxy"
+                label="Base Svc"
+                labelColor="bg-pink-500"
+                icon={ImageIcon}
+                color="pink"
+                description="Image Processing: Crop, Resize, Watermark"
+                badge="Standalone"
+                badgeIcon={Home}
+                isSelected={selectedPod === "imgproxy"}
+                onClick={() => handlePodClick("imgproxy")}
+              />
+            </div>
+            
+            {/* Expanded Pod Detail */}
+            {selectedPod && (
+              <ExpandedPodDetail 
+                pod={selectedPod} 
+                onClose={() => setSelectedPod(null)} 
+              />
+            )}
+
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="storage" className="mt-6">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <SectionHeader 
+              icon={Database} 
+              title="Storage Layer" 
+              subtitle="Persistence services, categorized by Common / Standalone / Cloud"
+            />
+            
+            {/* Common Storage */}
+            <div className="mt-6 mb-6">
+              <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
+                <Network className="h-4 w-4" />
+                Common Storage (All Deployment Modes)
+              </h4>
+              <div className="grid grid-cols-3 gap-4">
+                <StorageCard
+                  name="PostgreSQL"
+                  type="Managed / External"
+                  icon={Database}
+                  color="blue"
+                  description="Business Data R/W"
+                  consumers={["main", "worker", "routine"]}
+                  selectedPod={selectedPod}
+                />
+                <StorageCard
+                  name="Redis"
+                  type="Managed / External"
+                  icon={Zap}
+                  color="red"
+                  description="Cache + MQ + Lock"
+                  consumers={["main", "worker", "routine", "fts"]}
+                  selectedPod={selectedPod}
+                />
+                <StorageCard
+                  name="ElasticSearch"
+                  type="Managed / External"
+                  icon={Search}
+                  color="yellow"
+                  description="Full-Text Search Index"
+                  consumers={["main", "fts"]}
+                  selectedPod={selectedPod}
+                />
+              </div>
+            </div>
+
+            {/* Standalone vs Cloud Storage */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Standalone Deployment Storage */}
+              <div className="border border-dashed border-orange-500/30 rounded-lg p-4 bg-orange-500/5">
+                <h4 className="text-sm font-medium text-orange-400 mb-3 flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Standalone Deployment
+                </h4>
+                <div className="space-y-3">
+                  <StorageCard
+                    name="MinIO"
+                    type="StatefulSet + PVC"
+                    icon={HardDrive}
+                    color="orange"
+                    description="S3-Compatible Object Storage"
+                    consumers={["main", "worker", "fts", "imgproxy"]}
+                    pvc="minio-data"
+                    selectedPod={selectedPod}
+                  />
+                  <div className="text-xs text-muted-foreground bg-background/50 rounded p-2">
+                    <div className="flex items-center gap-1 text-orange-400 mb-1">
+                      <ImageIcon className="h-3 w-3" />
+                      <span className="font-medium">Imgproxy Note</span>
+                    </div>
+                    MinIO only provides storage without image processing. Imgproxy reads source images from MinIO and provides crop/resize/watermark processing.
+                  </div>
                 </div>
-                MinIO only provides storage without image processing. Imgproxy reads source images from MinIO and provides crop/resize/watermark processing.
+              </div>
+
+              {/* Cloud Deployment Storage */}
+              <div className="border border-dashed border-cyan-500/30 rounded-lg p-4 bg-cyan-500/5">
+                <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
+                  <Cloud className="h-4 w-4" />
+                  Cloud Deployment
+                </h4>
+                <div className="space-y-3">
+                  <StorageCard
+                    name="OSS"
+                    type="Alibaba Cloud Object Storage"
+                    icon={Cloud}
+                    color="cyan"
+                    description="File Storage + Image Processing"
+                    consumers={["main", "worker", "fts"]}
+                    selectedPod={selectedPod}
+                  />
+                  <StorageCard
+                    name="SLS"
+                    type="Alibaba Cloud Log Service"
+                    icon={FileText}
+                    color="cyan"
+                    description="Centralized Log Collection"
+                    consumers={["main", "worker", "routine", "fts"]}
+                    selectedPod={selectedPod}
+                  />
+                  <div className="text-xs text-muted-foreground bg-background/50 rounded p-2">
+                    <div className="flex items-center gap-1 text-cyan-400 mb-1">
+                      <ImageIcon className="h-3 w-3" />
+                      <span className="font-medium">OSS Image Processing</span>
+                    </div>
+                    OSS has built-in image processing, no Imgproxy needed. Imgproxy Pod is not deployed in cloud mode.
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Storage Role Details */}
+            <div className="mt-6 border-t pt-6">
+              <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                <FileText size={16} className="text-blue-500" />
+                Storage Role Details
+              </h4>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-2 px-3 font-semibold w-32">Storage</th>
+                      <th className="text-left py-2 px-3 font-semibold">Role & Stored Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-dashed">
+                      <td className="py-3 px-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <Database size={14} className="text-blue-500" />
+                          <span className="font-medium">PostgreSQL</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-blue-400 mb-1">Core Business Data Storage</div>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Users, tenants, permissions and core tables</li>
+                          <li>• Form definitions and data records</li>
+                          <li>• Workflow definitions and instance states</li>
+                          <li>• System configurations and audit logs</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-dashed">
+                      <td className="py-3 px-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <Zap size={14} className="text-red-500" />
+                          <span className="font-medium">Redis</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-red-400 mb-1">Cache + Message Queue + Distributed Lock</div>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Session storage and token caching</li>
+                          <li>• Hot data cache (configs, permission trees)</li>
+                          <li>• Message queue (replaces RabbitMQ/Kafka)</li>
+                          <li>• Distributed locks (prevent duplicate task execution)</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-dashed">
+                      <td className="py-3 px-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <Search size={14} className="text-yellow-500" />
+                          <span className="font-medium">ElasticSearch</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-yellow-400 mb-1">Full-Text Search Service</div>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Document and attachment content indexing</li>
+                          <li>• Complex query conditions with fast retrieval</li>
+                          <li>• Search result highlighting</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-dashed">
+                      <td className="py-3 px-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <HardDrive size={14} className="text-orange-500" />
+                          <span className="font-medium">OSS / MinIO</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-orange-400 mb-1">Object Storage</div>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• User-uploaded files and attachments</li>
+                          <li>• Exported CSV/Excel files</li>
+                          <li>• Image storage and processing (OSS built-in for Cloud mode)</li>
+                        </ul>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-3 align-top">
+                        <div className="flex items-center gap-2">
+                          <FileText size={14} className="text-cyan-500" />
+                          <span className="font-medium">SLS</span>
+                          <span className="text-[10px] text-cyan-400 bg-cyan-500/10 px-1.5 rounded">Cloud</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-3">
+                        <div className="font-medium text-cyan-400 mb-1">Log Service (Cloud Mode Only)</div>
+                        <ul className="space-y-1 text-muted-foreground">
+                          <li>• Centralized log collection</li>
+                          <li>• Log querying and analysis</li>
+                          <li>• Alert configuration</li>
+                        </ul>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
-
-          {/* Cloud Deployment Storage */}
-          <div className="border border-dashed border-cyan-500/30 rounded-lg p-4 bg-cyan-500/5">
-            <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
-              <Cloud className="h-4 w-4" />
-              Cloud Deployment
-            </h4>
-            <div className="space-y-3">
-              <StorageCard
-                name="OSS"
-                type="Alibaba Cloud Object Storage"
-                icon={Cloud}
-                color="cyan"
-                description="File Storage + Image Processing"
-                consumers={["main", "worker", "fts"]}
-                selectedPod={selectedPod}
-              />
-              <StorageCard
-                name="SLS"
-                type="Alibaba Cloud Log Service"
-                icon={FileText}
-                color="cyan"
-                description="Centralized Log Collection"
-                consumers={["main", "worker", "routine", "fts"]}
-                selectedPod={selectedPod}
-              />
-              <div className="text-xs text-muted-foreground bg-background/50 rounded p-2">
-                <div className="flex items-center gap-1 text-cyan-400 mb-1">
-                  <ImageIcon className="h-3 w-3" />
-                  <span className="font-medium">OSS Image Processing</span>
+        </TabsContent>
+        
+        <TabsContent value="queue" className="mt-6">
+          <div className="bg-card border border-border rounded-xl p-6">
+            <SectionHeader 
+              icon={GitBranch} 
+              title="Message Queue Design" 
+              subtitle="Lightweight message queue based on Redis"
+            />
+            
+            <div className="mt-6">
+              <MessageQueueDiagram />
+            </div>
+            
+            {/* Queue Usage Scenarios */}
+            <div className="mt-6">
+              <h4 className="text-sm font-medium mb-4 flex items-center gap-2">
+                <Activity size={16} className="text-blue-500" />
+                Queue Usage Scenarios
+              </h4>
+              
+              <div className="space-y-4">
+                {/* Notification Queue */}
+                <div className="border border-blue-500/20 rounded-lg p-4 bg-blue-500/5">
+                  <h5 className="text-xs font-semibold text-blue-400 mb-3 flex items-center gap-2">
+                    <Bell size={14} />
+                    Notification Queue
+                  </h5>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-blue-300 min-w-[140px]">mail.send</code>
+                      <span className="text-muted-foreground">Send email after user registration or approval completion</span>
+                      <span className="ml-auto text-green-400">→ Worker</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-blue-300 min-w-[140px]">notification.send</code>
+                      <span className="text-muted-foreground">Push notifications for announcements or task assignments</span>
+                      <span className="ml-auto text-green-400">→ Worker</span>
+                    </div>
+                  </div>
                 </div>
-                OSS has built-in image processing, no Imgproxy needed. Imgproxy Pod is not deployed in cloud mode.
+                
+                {/* Data Processing Queue */}
+                <div className="border border-green-500/20 rounded-lg p-4 bg-green-500/5">
+                  <h5 className="text-xs font-semibold text-green-400 mb-3 flex items-center gap-2">
+                    <FileOutput size={14} />
+                    Data Processing Queue
+                  </h5>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-green-300 min-w-[140px]">export.csv</code>
+                      <span className="text-muted-foreground">Async report generation when exporting large datasets</span>
+                      <span className="ml-auto text-green-400">→ Worker</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-green-300 min-w-[140px]">data.sync</code>
+                      <span className="text-muted-foreground">Sync data changes to third-party systems</span>
+                      <span className="ml-auto text-green-400">→ Worker</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Search Index Queue */}
+                <div className="border border-purple-500/20 rounded-lg p-4 bg-purple-500/5">
+                  <h5 className="text-xs font-semibold text-purple-400 mb-3 flex items-center gap-2">
+                    <Search size={14} />
+                    Search Index Queue
+                  </h5>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-purple-300 min-w-[140px]">fts.index.create</code>
+                      <span className="text-muted-foreground">Parse uploaded files and build search index</span>
+                      <span className="ml-auto text-purple-400">→ FTS</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-purple-300 min-w-[140px]">fts.index.delete</code>
+                      <span className="text-muted-foreground">Remove index from ES when record is deleted</span>
+                      <span className="ml-auto text-purple-400">→ FTS</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Workflow Queue */}
+                <div className="border border-orange-500/20 rounded-lg p-4 bg-orange-500/5">
+                  <h5 className="text-xs font-semibold text-orange-400 mb-3 flex items-center gap-2">
+                    <GitBranch size={14} />
+                    Workflow Queue
+                  </h5>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center gap-3 bg-background/50 rounded p-2">
+                      <code className="font-mono text-orange-300 min-w-[140px]">workflow.trigger</code>
+                      <span className="text-muted-foreground">Trigger approval workflows or automation rules on form submit</span>
+                      <span className="ml-auto text-green-400">→ Worker</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
+
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              <BenefitCard
+                icon={Shield}
+                title="Reliability"
+                description="Message persistence with retry mechanism"
+              />
+              <BenefitCard
+                icon={Zap}
+                title="Performance"
+                description="Native Redis, low latency high throughput"
+              />
+              <BenefitCard
+                icon={Settings}
+                title="Simplicity"
+                description="No additional MQ middleware required"
+              />
+            </div>
           </div>
-        </div>
-      </div>
-
-      {/* Message Queue Design */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <SectionHeader 
-          icon={GitBranch} 
-          title="Message Queue Design" 
-          subtitle="Lightweight message queue based on Redis"
-        />
-        
-        <div className="mt-6">
-          <MessageQueueDiagram />
-        </div>
-        
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <BenefitCard
-            icon={Shield}
-            title="Reliability"
-            description="Message persistence with retry mechanism"
-          />
-          <BenefitCard
-            icon={Zap}
-            title="Performance"
-            description="Native Redis, low latency high throughput"
-          />
-          <BenefitCard
-            icon={Settings}
-            title="Simplicity"
-            description="No additional MQ middleware required"
-          />
-        </div>
-      </div>
-
-      {/* Kubernetes Resources */}
-      <div className="bg-card border border-border rounded-xl p-6">
-        <SectionHeader 
-          icon={Container} 
-          title="Kubernetes Resources" 
-          subtitle="Categorized by resource type"
-        />
-        
-        <div className="grid grid-cols-4 gap-4 mt-6">
-          <K8sResourceGroup
-            title="Workloads"
-            items={[
-              { name: "main", type: "Deployment" },
-              { name: "worker", type: "Deployment" },
-              { name: "routine", type: "Deployment" },
-              { name: "fts", type: "Deployment" },
-              { name: "imgproxy", type: "Deployment", badge: "Standalone" },
-              { name: "minio", type: "StatefulSet", badge: "Standalone" },
-            ]}
-          />
-          <K8sResourceGroup
-            title="Services"
-            items={[
-              { name: "main-svc", type: "ClusterIP" },
-              { name: "minio-svc", type: "ClusterIP", badge: "Standalone" },
-              { name: "imgproxy-svc", type: "ClusterIP", badge: "Standalone" },
-            ]}
-          />
-          <K8sResourceGroup
-            title="Storage"
-            items={[
-              { name: "minio-data", type: "PVC", badge: "Standalone" },
-              { name: "logs-pvc", type: "PVC" },
-              { name: "temp-pvc", type: "PVC" },
-            ]}
-          />
-          <K8sResourceGroup
-            title="Config"
-            items={[
-              { name: "app-config", type: "ConfigMap" },
-              { name: "app-secrets", type: "Secret" },
-            ]}
-          />
-        </div>
-      </div>
-
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -492,255 +802,221 @@ const ExpandedPodDetail = ({ pod, onClose }: { pod: PodType; onClose: () => void
         </div>
         <button 
           onClick={onClose}
-          className="p-1 hover:bg-background/50 rounded transition-colors"
+          className="p-1 rounded hover:bg-secondary transition-colors"
         >
           <X className="h-4 w-4 text-muted-foreground" />
         </button>
       </div>
       
-      {/* Content Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-6">
         {/* Responsibilities */}
-        <div className="border border-border/50 rounded-lg p-4 bg-background/30">
-          <div className="flex items-center gap-2 mb-3">
-            <config.icon className="h-4 w-4 text-primary" />
-            <h5 className="font-medium text-sm">Core Responsibilities</h5>
-          </div>
+        <div>
+          <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Core Responsibilities</h5>
           <div className="space-y-2">
-            {config.responsibilities.map((item, idx) => (
-              <div key={idx} className="flex items-start gap-2 text-sm">
-                <item.icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                <span>{item.text}</span>
-              </div>
-            ))}
+            {config.responsibilities.map((item, idx) => {
+              const ItemIcon = item.icon;
+              return (
+                <div key={idx} className="flex items-start gap-2 text-xs">
+                  <ItemIcon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${colors.icon}`} />
+                  <span className="text-muted-foreground">{item.text}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
         
-        {/* Tech Implementation */}
-        <div className="border border-border/50 rounded-lg p-4 bg-background/30">
-          <div className="flex items-center gap-2 mb-3">
-            <Settings className="h-4 w-4 text-primary" />
-            <h5 className="font-medium text-sm">Tech Implementation</h5>
-          </div>
+        {/* Tech Stack */}
+        <div>
+          <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Technology Stack</h5>
           <div className="space-y-2">
             {config.tech.map((item, idx) => (
-              <div key={idx} className="flex items-center justify-between text-sm">
+              <div key={idx} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">{item.label}</span>
-                <span className="font-mono text-xs bg-background/50 px-2 py-0.5 rounded">{item.value}</span>
+                <span className={`font-medium ${colors.text}`}>{item.value}</span>
               </div>
             ))}
           </div>
+          
+          {/* Note if exists */}
+          {config.note && (
+            <div className={`mt-4 p-3 rounded-lg bg-${config.note.color}-500/10 border border-${config.note.color}-500/20`}>
+              <div className={`flex items-center gap-1.5 text-${config.note.color}-400 mb-1`}>
+                <config.note.icon className="h-3.5 w-3.5" />
+                <span className="text-xs font-medium">{config.note.title}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">{config.note.content}</p>
+            </div>
+          )}
         </div>
       </div>
       
       {/* Storage Dependencies */}
-      <div className="mt-4">
-        <StorageDependencies pod={pod} />
-      </div>
-      
-      {/* Optional Note */}
-      {config.note && (
-        <div className={`mt-4 bg-${config.note.color}-500/10 border border-${config.note.color}-500/30 rounded-lg p-3`}>
-          <div className={`flex items-center gap-2 text-${config.note.color}-400 mb-1`}>
-            <config.note.icon className="h-4 w-4" />
-            <span className="font-medium text-sm">{config.note.title}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{config.note.content}</p>
+      <div className="mt-4 pt-4 border-t">
+        <h5 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Storage Dependencies</h5>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(podStorageMap[pod]).map(([storage, usage]) => (
+            <div key={storage} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50 text-xs">
+              <span className="font-medium">{storage}:</span>
+              <span className="text-muted-foreground">{usage}</span>
+            </div>
+          ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };
 
-
 // Helper Components
 const SectionHeader = ({ icon: Icon, title, subtitle }: { icon: any; title: string; subtitle: string }) => (
-  <div className="flex items-center gap-3">
+  <div className="flex items-start gap-3">
     <div className="p-2 rounded-lg bg-primary/10">
       <Icon className="h-5 w-5 text-primary" />
     </div>
     <div>
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="font-semibold text-lg">{title}</h3>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
     </div>
   </div>
 );
 
-// Storage usage badges for pod cards
-const StorageUsageBadges = ({ pod }: { pod: PodType }) => {
-  const deps = podStorageMap[pod];
-  const badges: { name: string; color: string }[] = [];
-  
-  if (deps.postgres) badges.push({ name: "PG", color: "bg-blue-500/20 text-blue-400" });
-  if (deps.redis) badges.push({ name: "Redis", color: "bg-red-500/20 text-red-400" });
-  if (deps.objectStorage) badges.push({ name: pod === "imgproxy" ? "MinIO" : "OSS/MinIO", color: "bg-cyan-500/20 text-cyan-400" });
-  if (deps.elasticsearch) badges.push({ name: "ES", color: "bg-yellow-500/20 text-yellow-400" });
-  if (deps.sls) badges.push({ name: "SLS", color: "bg-cyan-500/20 text-cyan-400" });
-  
-  return (
-    <div className="flex flex-wrap gap-1 mt-3 pt-2 border-t border-border/30">
-      <span className="text-[10px] text-muted-foreground mr-1">Uses:</span>
-      {badges.map(b => (
-        <span key={b.name} className={`text-[10px] px-1.5 py-0.5 rounded ${b.color}`}>
-          {b.name}
-        </span>
-      ))}
-    </div>
-  );
-};
-
-const PodOverviewCard = ({ 
+const PodOverviewCard = ({
   pod,
-  name, 
-  label, 
-  labelColor, 
-  icon: Icon, 
-  color, 
+  name,
+  label,
+  labelColor,
+  icon: Icon,
+  color,
   description,
   badge,
   badgeIcon: BadgeIcon,
   isSelected,
   onClick
-}: { 
+}: {
   pod: PodType;
-  name: string; 
-  label: string; 
-  labelColor: string; 
-  icon: any; 
-  color: string; 
+  name: string;
+  label: string;
+  labelColor: string;
+  icon: any;
+  color: string;
   description: string;
   badge?: string;
   badgeIcon?: any;
-  isSelected?: boolean;
-  onClick?: () => void;
+  isSelected: boolean;
+  onClick: () => void;
 }) => {
   const colorClasses: Record<string, string> = {
-    blue: "border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10",
-    green: "border-green-500/30 bg-green-500/5 hover:bg-green-500/10",
-    orange: "border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10",
-    purple: "border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10",
-    pink: "border-pink-500/30 bg-pink-500/5 hover:bg-pink-500/10",
+    blue: "border-blue-500/50 bg-blue-500/5",
+    green: "border-green-500/50 bg-green-500/5",
+    orange: "border-orange-500/50 bg-orange-500/5",
+    purple: "border-purple-500/50 bg-purple-500/5",
+    pink: "border-pink-500/50 bg-pink-500/5"
   };
   
-  const selectedClasses: Record<string, string> = {
-    blue: "ring-2 ring-blue-500 bg-blue-500/20",
-    green: "ring-2 ring-green-500 bg-green-500/20",
-    orange: "ring-2 ring-orange-500 bg-orange-500/20",
-    purple: "ring-2 ring-purple-500 bg-purple-500/20",
-    pink: "ring-2 ring-pink-500 bg-pink-500/20",
-  };
-  
-  const iconColorClasses: Record<string, string> = {
+  const textClasses: Record<string, string> = {
     blue: "text-blue-400",
     green: "text-green-400",
     orange: "text-orange-400",
     purple: "text-purple-400",
-    pink: "text-pink-400",
+    pink: "text-pink-400"
   };
-  
+
   return (
-    <div 
-      className={`relative border rounded-lg p-4 transition-all cursor-pointer ${colorClasses[color]} ${isSelected ? selectedClasses[color] : ''}`}
+    <button
       onClick={onClick}
+      className={cn(
+        "relative p-4 rounded-xl border-2 transition-all duration-200 text-left",
+        isSelected ? colorClasses[color] : "border-border hover:border-primary/30",
+        "hover:shadow-md"
+      )}
     >
-      {/* Label badge */}
-      <span className={`absolute -top-2 left-3 px-2 py-0.5 text-xs font-medium text-white rounded ${labelColor}`}>
+      {/* Label */}
+      <div className={cn("absolute -top-2 left-3 px-2 py-0.5 rounded text-[10px] font-medium text-white", labelColor)}>
         {label}
-      </span>
+      </div>
       
-      {/* Deployment mode badge */}
-      {badge && (
-        <span className="absolute -top-2 right-3 px-2 py-0.5 text-xs font-medium bg-orange-500 text-white rounded flex items-center gap-1">
-          {BadgeIcon && <BadgeIcon className="h-3 w-3" />}
+      {/* Badge */}
+      {badge && BadgeIcon && (
+        <div className="absolute -top-2 right-3 px-2 py-0.5 rounded text-[10px] font-medium bg-orange-500/20 text-orange-400 flex items-center gap-1">
+          <BadgeIcon className="h-3 w-3" />
           {badge}
-        </span>
+        </div>
       )}
       
-      <div className="flex items-center gap-2 mt-2 mb-2">
-        <Icon className={`h-5 w-5 ${iconColorClasses[color]}`} />
-        <span className="font-semibold">{name}</span>
+      {/* Content */}
+      <div className="mt-2">
+        <div className="flex items-center gap-2 mb-2">
+          <Icon className={cn("h-5 w-5", textClasses[color])} />
+          <span className={cn("font-semibold", textClasses[color])}>{name}</span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
       </div>
-      <p className="text-xs text-muted-foreground">{description}</p>
-      
-      {/* Storage usage badges */}
-      <StorageUsageBadges pod={pod} />
-    </div>
+    </button>
   );
 };
 
-const StorageCard = ({ 
-  name, 
-  type, 
-  icon: Icon, 
-  color, 
-  description, 
+const StorageCard = ({
+  name,
+  type,
+  icon: Icon,
+  color,
+  description,
   consumers,
   pvc,
   selectedPod
-}: { 
-  name: string; 
-  type: string; 
-  icon: any; 
-  color: string; 
-  description: string; 
+}: {
+  name: string;
+  type: string;
+  icon: any;
+  color: string;
+  description: string;
   consumers: string[];
   pvc?: string;
-  selectedPod?: PodType | null;
+  selectedPod: PodType | null;
 }) => {
-  const isUsed = selectedPod ? consumers.includes(selectedPod) : null;
+  const isHighlighted = selectedPod && consumers.includes(selectedPod);
   
   const colorClasses: Record<string, string> = {
-    blue: "border-blue-500/30 bg-blue-500/5",
-    red: "border-red-500/30 bg-red-500/5",
-    yellow: "border-yellow-500/30 bg-yellow-500/5",
-    orange: "border-orange-500/30 bg-orange-500/5",
-    cyan: "border-cyan-500/30 bg-cyan-500/5",
+    blue: "border-blue-500/50 bg-blue-500/10",
+    red: "border-red-500/50 bg-red-500/10",
+    yellow: "border-yellow-500/50 bg-yellow-500/10",
+    orange: "border-orange-500/50 bg-orange-500/10",
+    cyan: "border-cyan-500/50 bg-cyan-500/10"
   };
   
-  const activeClasses: Record<string, string> = {
-    blue: "ring-2 ring-blue-500 bg-blue-500/20",
-    red: "ring-2 ring-red-500 bg-red-500/20",
-    yellow: "ring-2 ring-yellow-500 bg-yellow-500/20",
-    orange: "ring-2 ring-orange-500 bg-orange-500/20",
-    cyan: "ring-2 ring-cyan-500 bg-cyan-500/20",
-  };
-  
-  const iconColorClasses: Record<string, string> = {
+  const textClasses: Record<string, string> = {
     blue: "text-blue-400",
     red: "text-red-400",
     yellow: "text-yellow-400",
     orange: "text-orange-400",
-    cyan: "text-cyan-400",
+    cyan: "text-cyan-400"
   };
-  
-  // 根据选中状态决定样式
-  const cardStyle = isUsed === null 
-    ? colorClasses[color] 
-    : isUsed 
-      ? `${colorClasses[color]} ${activeClasses[color]}` 
-      : `${colorClasses[color]} opacity-30`;
-  
+
   return (
-    <div className={`border rounded-lg p-3 transition-all ${cardStyle}`}>
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-4 w-4 ${iconColorClasses[color]}`} />
-          <span className="font-medium text-sm">{name}</span>
+    <div className={cn(
+      "p-4 rounded-lg border transition-all duration-200",
+      isHighlighted ? colorClasses[color] : "border-border bg-card/50"
+    )}>
+      <div className="flex items-center gap-2 mb-2">
+        <Icon className={cn("h-5 w-5", textClasses[color])} />
+        <div>
+          <span className={cn("font-semibold", textClasses[color])}>{name}</span>
+          <span className="text-xs text-muted-foreground ml-2">({type})</span>
         </div>
-        <span className="text-xs text-muted-foreground bg-background/50 px-2 py-0.5 rounded">{type}</span>
       </div>
       <p className="text-xs text-muted-foreground mb-2">{description}</p>
       {pvc && (
-        <div className="text-xs text-orange-400 mb-2 flex items-center gap-1">
-          <HardDrive className="h-3 w-3" />
-          PVC: {pvc}
+        <div className="text-[10px] text-muted-foreground">
+          PVC: <code className="px-1 py-0.5 rounded bg-secondary">{pvc}</code>
         </div>
       )}
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 mt-2">
         {consumers.map(c => (
           <span 
             key={c} 
-            className={`text-xs px-1.5 py-0.5 rounded ${selectedPod === c ? 'bg-primary text-primary-foreground' : 'bg-background/50'}`}
+            className={cn(
+              "px-1.5 py-0.5 rounded text-[10px]",
+              selectedPod === c ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"
+            )}
           >
             {c}
           </span>
@@ -751,94 +1027,12 @@ const StorageCard = ({
 };
 
 const BenefitCard = ({ icon: Icon, title, description }: { icon: any; title: string; description: string }) => (
-  <div className="border border-border/50 rounded-lg p-4 bg-card/50">
+  <div className="p-4 rounded-lg border bg-card/50">
     <div className="flex items-center gap-2 mb-2">
-      <Icon className="h-4 w-4 text-primary" />
-      <span className="font-medium">{title}</span>
+      <Icon className="h-5 w-5 text-primary" />
+      <span className="font-semibold text-sm">{title}</span>
     </div>
-    <p className="text-sm text-muted-foreground">{description}</p>
+    <p className="text-xs text-muted-foreground">{description}</p>
   </div>
 );
 
-const K8sResourceGroup = ({ title, items }: { title: string; items: { name: string; type: string; badge?: string }[] }) => (
-  <div className="border border-border/50 rounded-lg p-4 bg-card/30">
-    <h4 className="font-medium mb-3 text-sm">{title}</h4>
-    <div className="space-y-2">
-      {items.map(item => (
-        <div key={item.name} className="flex items-center justify-between text-xs">
-          <span className="font-mono">{item.name}</span>
-          <div className="flex items-center gap-1">
-            {item.badge && (
-              <span className="px-1 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[10px]">
-                {item.badge}
-              </span>
-            )}
-            <span className="text-muted-foreground">{item.type}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const DetailSection = ({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) => (
-  <div className="border border-border/50 rounded-lg p-4 bg-card/30">
-    <div className="flex items-center gap-2 mb-4">
-      <Icon className="h-4 w-4 text-primary" />
-      <h4 className="font-medium">{title}</h4>
-    </div>
-    <div className="space-y-2">{children}</div>
-  </div>
-);
-
-const ResponsibilityItem = ({ icon: Icon, text }: { icon: any; text: string }) => (
-  <div className="flex items-start gap-2 text-sm">
-    <Icon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-    <span>{text}</span>
-  </div>
-);
-
-const TechItem = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex items-center justify-between text-sm">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="font-mono text-xs bg-background/50 px-2 py-0.5 rounded">{value}</span>
-  </div>
-);
-
-const StorageDependencies = ({ pod }: { pod: PodType }) => {
-  const deps = podStorageMap[pod];
-  const items = [
-    deps.postgres && { icon: Database, name: "PostgreSQL", desc: deps.postgres, color: "blue" },
-    deps.redis && { icon: Zap, name: "Redis", desc: deps.redis, color: "red" },
-    deps.objectStorage && { icon: HardDrive, name: "OSS/MinIO", desc: deps.objectStorage, color: "cyan" },
-    deps.elasticsearch && { icon: Search, name: "ElasticSearch", desc: deps.elasticsearch, color: "yellow" },
-    deps.sls && { icon: FileText, name: "SLS", desc: deps.sls, color: "cyan" },
-  ].filter(Boolean) as { icon: any; name: string; desc: string; color: string }[];
-  
-  const colorClasses: Record<string, string> = {
-    blue: "text-blue-400",
-    red: "text-red-400",
-    cyan: "text-cyan-400",
-    yellow: "text-yellow-400",
-  };
-  
-  return (
-    <div className="border border-border/50 rounded-lg p-4 bg-card/30">
-      <div className="flex items-center gap-2 mb-4">
-        <Database className="h-4 w-4 text-primary" />
-        <h4 className="font-medium">Storage Dependencies</h4>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {items.map(item => (
-          <div key={item.name} className="flex items-center gap-2 text-sm">
-            <item.icon className={`h-4 w-4 ${colorClasses[item.color]}`} />
-            <span className="font-medium">{item.name}</span>
-            <span className="text-muted-foreground text-xs">- {item.desc}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-export default TenantCoreArchitecture;

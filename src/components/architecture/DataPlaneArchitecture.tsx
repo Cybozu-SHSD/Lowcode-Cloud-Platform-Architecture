@@ -24,18 +24,110 @@ import {
   Clock,
   Search,
   Zap,
-  Image
+  Image,
+  ChevronRight,
+  Cpu
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-export function DataPlaneArchitecture() {
+interface DataPlaneArchitectureProps {
+  onNavigateToPCClient?: () => void;
+  onNavigateToCoreSystem?: () => void;
+}
+
+export function DataPlaneArchitecture({ onNavigateToPCClient, onNavigateToCoreSystem }: DataPlaneArchitectureProps) {
   return (
     <div className="space-y-4">
+      {/* Deep Dive Navigation Cards */}
+      <div className="bg-gradient-to-br from-primary/5 via-emerald-500/5 to-blue-500/5 rounded-xl p-6 border-2 border-dashed border-primary/30">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Search size={14} className="text-primary" />
+          </div>
+          <h4 className="font-semibold text-sm">Deep Dive Sections</h4>
+          <span className="text-xs text-muted-foreground">— Click to explore detailed architecture</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* PC Client Card */}
+          <button
+            onClick={onNavigateToPCClient}
+            className="group text-left bg-card rounded-xl p-5 border-2 border-emerald-200 dark:border-emerald-800 hover:border-emerald-500 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                  <Monitor size={20} />
+                </div>
+                <div>
+                  <h5 className="font-semibold text-sm group-hover:text-emerald-600 transition-colors">PC Client (Next.js)</h5>
+                  <p className="text-xs text-muted-foreground">Primary desktop application</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                BFF Proxy pattern & authentication
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                8 business modules (Form, Workflow, Data...)
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Page routing & API integration
+              </div>
+            </div>
+          </button>
+
+          {/* Core System Card */}
+          <button
+            onClick={onNavigateToCoreSystem}
+            className="group text-left bg-card rounded-xl p-5 border-2 border-blue-200 dark:border-blue-800 hover:border-blue-500 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Cpu size={20} />
+                </div>
+                <div>
+                  <h5 className="font-semibold text-sm group-hover:text-blue-600 transition-colors">Core System (NestJS)</h5>
+                  <p className="text-xs text-muted-foreground">Backend microservices</p>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-muted-foreground group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                5 Pods: Main + Worker + Routine + FTS + Imgproxy
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Redis message queue & storage layer
+              </div>
+              <div className="text-xs text-muted-foreground flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Kubernetes resources & deployment modes
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* Multi-Platform Clients */}
       <LayerContainer title="Multi-Platform Clients" subtitle="One Cloud, Multi-Platform | Unified API Service" color="green">
         <div className="flex flex-wrap justify-center gap-3">
-          <ClientBox icon={<Monitor size={16} />} title="PC" subtitle="Next.js" />
+          <ClientBox 
+            icon={<Monitor size={16} />} 
+            title="PC" 
+            subtitle="Next.js + BFF" 
+            primary 
+            onClick={onNavigateToPCClient}
+          />
           <ClientBox icon={<MessageSquare size={16} />} title="Mini Program" subtitle="WeChat/Alipay" />
           <ClientBox icon={<Globe size={16} />} title="H5 Web" subtitle="Responsive" />
           <ClientBox icon={<Smartphone size={16} />} title="iOS App" subtitle="Native/Hybrid" dimmed />
@@ -80,8 +172,20 @@ export function DataPlaneArchitecture() {
         <div className="space-y-4">
           {/* ACK Managed Cluster */}
           <div className="border border-blue-300 dark:border-blue-700 rounded-xl p-4 bg-blue-50/50 dark:bg-blue-900/20">
-            <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">ACK Managed Cluster Pro</div>
-            <div className="text-xs text-muted-foreground mb-3">Managed K8s Control Plane | Auto-scaling Nodes | Multi-Tenant Isolation</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-semibold text-blue-600 dark:text-blue-400 mb-1">ACK Managed Cluster Pro</div>
+                <div className="text-xs text-muted-foreground mb-3">Managed K8s Control Plane | Auto-scaling Nodes | Multi-Tenant Isolation</div>
+              </div>
+              {onNavigateToCoreSystem && (
+                <button
+                  onClick={onNavigateToCoreSystem}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  View Core System Details <ChevronRight size={12} />
+                </button>
+              )}
+            </div>
             
             {/* Tenant Namespaces with Microservices */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
@@ -171,10 +275,20 @@ export function DataPlaneArchitecture() {
 
       {/* Microservices & Base Services Overview */}
       <div className="bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-900/10 dark:to-purple-900/10 rounded-xl p-6 border mt-8">
-        <h4 className="font-semibold text-base mb-4 flex items-center gap-2">
-          <Server size={18} className="text-blue-600" />
-          Microservices Overview (NestJS Monorepo)
-        </h4>
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="font-semibold text-base flex items-center gap-2">
+            <Server size={18} className="text-blue-600" />
+            Microservices Overview (NestJS Monorepo)
+          </h4>
+          {onNavigateToCoreSystem && (
+            <button
+              onClick={onNavigateToCoreSystem}
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 bg-blue-100 dark:bg-blue-900/30 px-3 py-1.5 rounded-lg"
+            >
+              View Full Details <ChevronRight size={12} />
+            </button>
+          )}
+        </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
@@ -246,10 +360,13 @@ export function DataPlaneArchitecture() {
 
       {/* Tenant Application Capabilities */}
       <div className="bg-gradient-to-br from-data-plane/5 to-control-plane/5 rounded-xl p-6 border mt-4">
-        <h4 className="font-semibold text-base mb-5 flex items-center gap-2">
+        <h4 className="font-semibold text-base mb-2 flex items-center gap-2">
           <Settings size={18} className="text-data-plane" />
           Tenant Application Capabilities
         </h4>
+        <p className="text-xs text-muted-foreground mb-5">
+          These capabilities are implemented in <button onClick={onNavigateToPCClient} className="text-emerald-600 hover:underline font-medium">PC Client</button> (frontend) and served by <button onClick={onNavigateToCoreSystem} className="text-blue-600 hover:underline font-medium">Core System</button> (backend)
+        </p>
         
         {/* Core Systems */}
         <div className="mb-6">
@@ -382,132 +499,167 @@ function LayerContainer({
   );
 }
 
-function ClientBox({ icon, title, subtitle, dimmed }: { icon: React.ReactNode; title: string; subtitle: string; dimmed?: boolean }) {
+function ClientBox({ 
+  icon, 
+  title, 
+  subtitle, 
+  dimmed,
+  primary,
+  onClick
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  subtitle: string;
+  dimmed?: boolean;
+  primary?: boolean;
+  onClick?: () => void;
+}) {
+  const Component = onClick ? 'button' : 'div';
   return (
-    <div className={cn(
-      "bg-white dark:bg-slate-800 rounded-lg px-4 py-2 border shadow-sm min-w-[90px] text-center",
-      dimmed && "opacity-40"
-    )}>
-      <div className="flex items-center justify-center gap-1.5 text-sm font-medium text-foreground">
+    <Component
+      onClick={onClick}
+      className={cn(
+        "rounded-lg px-4 py-3 text-center min-w-[100px] transition-all",
+        dimmed 
+          ? "bg-slate-100 dark:bg-slate-800/50 opacity-60" 
+          : primary 
+            ? "bg-emerald-600 text-white hover:bg-emerald-700 cursor-pointer shadow-md" 
+            : "bg-white dark:bg-slate-800 border hover:shadow-md"
+      )}
+    >
+      <div className={cn(
+        "flex items-center justify-center gap-2 font-semibold text-sm",
+        primary ? "text-white" : ""
+      )}>
         {icon}
         {title}
       </div>
-      <div className="text-xs text-muted-foreground">{subtitle}</div>
-    </div>
+      <div className={cn(
+        "text-xs mt-1",
+        primary ? "text-emerald-100" : "text-muted-foreground"
+      )}>{subtitle}</div>
+    </Component>
   );
 }
 
 function SecurityBox({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg px-3 py-2 border">
-      <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+    <div className="bg-white dark:bg-slate-800 rounded-lg px-3 py-2 text-center border">
+      <div className="flex items-center justify-center gap-1.5 font-medium text-xs">
         {icon}
         {title}
       </div>
-      <div className="text-xs text-muted-foreground">{subtitle}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</div>
     </div>
   );
 }
 
-function FlowArrow({ label, dashed, small }: { label?: string; dashed?: boolean; small?: boolean }) {
+function FlowArrow({ label, small, dashed }: { label?: string; small?: boolean; dashed?: boolean }) {
   return (
-    <div className="flex flex-col items-center py-1">
-      {label && <div className={`text-muted-foreground mb-1 ${small ? 'text-[10px]' : 'text-xs'}`}>{label}</div>}
-      <div className={`flex flex-col items-center ${dashed ? 'opacity-60' : ''}`}>
-        <div className={`w-px ${small ? 'h-3' : 'h-4'} ${dashed ? 'border-l border-dashed border-muted-foreground' : 'bg-muted-foreground/50'}`} />
-        <ArrowDown size={small ? 12 : 14} className="text-muted-foreground -mt-1" />
-      </div>
+    <div className={cn("flex flex-col items-center gap-1", small ? "py-1" : "py-2")}>
+      <ArrowDown size={small ? 14 : 18} className={cn("text-muted-foreground", dashed && "opacity-50")} />
+      {label && <span className="text-[10px] text-muted-foreground">{label}</span>}
     </div>
   );
 }
 
 function NamespaceBox({ name, color }: { name: string; color: "blue" | "rose" }) {
   const colorClasses = {
-    blue: "border-blue-400 bg-blue-100 dark:bg-blue-900/40",
-    rose: "border-rose-400 bg-rose-100 dark:bg-rose-900/40"
+    blue: "border-blue-400 bg-blue-100/50 dark:bg-blue-900/30",
+    rose: "border-rose-400 bg-rose-100/50 dark:bg-rose-900/30"
   };
-  const textColor = color === "blue" ? "text-blue-600 dark:text-blue-400" : "text-rose-600 dark:text-rose-400";
+  const textClasses = {
+    blue: "text-blue-600 dark:text-blue-400",
+    rose: "text-rose-600 dark:text-rose-400"
+  };
 
   return (
-    <div className={`border rounded-lg p-3 ${colorClasses[color]}`}>
-      <div className={`text-xs font-medium ${textColor} mb-2`}>
+    <div className={cn("border rounded-lg p-3", colorClasses[color])}>
+      <div className={cn("text-xs font-semibold mb-2", textClasses[color])}>
         <Container size={12} className="inline mr-1" />
-        Namespace: {name}
+        namespace: {name}
       </div>
-      {/* Microservices Pods */}
-      <div className="grid grid-cols-2 gap-1.5 mb-2">
-        <div className="bg-blue-500 rounded px-2 py-1.5 text-[10px] text-center font-medium text-white">
-          <Server size={10} className="inline mr-1" />
-          Main
-        </div>
-        <div className="bg-green-500 rounded px-2 py-1.5 text-[10px] text-center font-medium text-white">
-          <Mail size={10} className="inline mr-1" />
-          Worker
-        </div>
-        <div className="bg-amber-500 rounded px-2 py-1.5 text-[10px] text-center font-medium text-white">
-          <Clock size={10} className="inline mr-1" />
-          Routine
-        </div>
-        <div className="bg-purple-500 rounded px-2 py-1.5 text-[10px] text-center font-medium text-white">
-          <Search size={10} className="inline mr-1" />
-          FTS
-        </div>
-      </div>
-      <div className="text-[9px] text-muted-foreground bg-white/50 dark:bg-slate-800/50 rounded px-2 py-1">
-        <span className="font-medium">Architecture:</span> Modular Monolith + Technical Microservices (NestJS)
+      <div className="flex flex-wrap gap-1.5">
+        <MicroserviceBadge name="main" type="core" />
+        <MicroserviceBadge name="worker" type="satellite" />
+        <MicroserviceBadge name="routine" type="satellite" />
+        <MicroserviceBadge name="fts" type="satellite" />
       </div>
     </div>
+  );
+}
+
+function MicroserviceBadge({ name, type }: { name: string; type: "core" | "satellite" }) {
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium",
+      type === "core" 
+        ? "bg-blue-500 text-white" 
+        : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+    )}>
+      <Server size={10} />
+      {name}
+    </span>
   );
 }
 
 function SharedComponent({ name }: { name: string }) {
   return (
-    <div className="bg-white dark:bg-slate-700 rounded px-2 py-1 text-xs border">
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-white dark:bg-slate-700 text-[10px] border">
       {name}
-    </div>
+    </span>
   );
 }
 
 function TenantResources({ name, color, dbName }: { name: string; color: "blue" | "rose"; dbName: string }) {
   const textColor = color === "blue" ? "text-blue-600 dark:text-blue-400" : "text-rose-600 dark:text-rose-400";
-  const tenantLetter = color === "blue" ? "a" : "b";
-
+  const bucketName = color === "blue" ? "tenant-a-bucket" : "tenant-b-bucket";
+  
   return (
-    <div className="bg-white dark:bg-slate-800/50 rounded-lg p-3 border">
-      <div className={`text-xs font-medium ${textColor} mb-2`}>
-        <Container size={12} className="inline mr-1" />
-        {name} - Dedicated Resources
+    <div className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-3 border">
+      <div className={cn("text-xs font-semibold mb-2 flex items-center gap-1.5", textColor)}>
+        <Globe size={12} />
+        {name} – Dedicated Resources
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <ResourceItem icon={<Database size={14} />} title={`PostgreSQL`} subtitle={dbName} />
-        <ResourceItem icon={<HardDrive size={14} />} title={`MinIO / OSS`} subtitle={`tenant-${tenantLetter}-bucket`} />
-        <ResourceItem icon={<Zap size={14} />} title={`Redis`} subtitle={`MQ + Cache`} />
-        <ResourceItem icon={<Search size={14} />} title={`Elasticsearch`} subtitle={`FTS Index`} />
-        <ResourceItem icon={<Cloud size={14} />} title={`SLS`} subtitle={`Logs`} />
+      <div className="grid grid-cols-5 gap-2 text-center">
+        <div className="flex flex-col items-center gap-1">
+          <Database size={14} className="text-blue-500" />
+          <span className="text-[10px] font-medium">PostgreSQL</span>
+          <span className="text-[9px] text-muted-foreground">{dbName}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <HardDrive size={14} className="text-orange-500" />
+          <span className="text-[10px] font-medium">MinIO / OSS</span>
+          <span className="text-[9px] text-muted-foreground">{bucketName}</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Zap size={14} className="text-red-500" />
+          <span className="text-[10px] font-medium">Redis</span>
+          <span className="text-[9px] text-muted-foreground">MQ + Cache</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Search size={14} className="text-yellow-500" />
+          <span className="text-[10px] font-medium">Elasticsearch</span>
+          <span className="text-[9px] text-muted-foreground">FTS Index</span>
+        </div>
+        <div className="flex flex-col items-center gap-1">
+          <Cloud size={14} className="text-cyan-500" />
+          <span className="text-[10px] font-medium">SLS</span>
+          <span className="text-[9px] text-muted-foreground">Logs</span>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function ResourceItem({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <div className="flex flex-col items-center text-center">
-      <div className="text-muted-foreground mb-1">{icon}</div>
-      <div className="text-[10px] font-medium text-foreground">{title}</div>
-      <div className="text-[9px] text-muted-foreground">{subtitle}</div>
     </div>
   );
 }
 
 function ThirdPartyBox({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg px-3 py-2 border min-w-[100px] text-center">
-      <div className="flex items-center justify-center gap-1.5 text-sm font-medium text-foreground">
+    <div className="bg-white dark:bg-slate-800 rounded-lg px-4 py-2 text-center border">
+      <div className="flex items-center justify-center gap-1.5 font-medium text-xs">
         {icon}
         {title}
       </div>
-      <div className="text-xs text-muted-foreground">{subtitle}</div>
+      <div className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</div>
     </div>
   );
 }
-
